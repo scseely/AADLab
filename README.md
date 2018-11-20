@@ -1,7 +1,5 @@
 # A Lab for Understanding Multi-tenant Azure Active Directory Support
 
-# Introduction
-
 Applications use Azure Active Directory (AAD) for authenticating users. Some applications need to authenticate users from more than one AAD. Two common use cases are:
 
 1. The organization has employees in two or more AADs due to acquisitions, differences in departmental procurement, or because of historical reasons.
