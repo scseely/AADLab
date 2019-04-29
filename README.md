@@ -28,7 +28,7 @@ Many of the exercises in this lab can be executed from a GUI or web page. Becaus
 In this lab, we will clone a git repository. Open a command line interface and navigate to the directory where you want to run the lab. Enter the following git command:
 
 ```
-git clone [https://github.com/scseely/AADMultiTenantLab.git](https://github.com/scseely/AADMultiTenantLab.git)
+git clone [https://github.com/scseely/AADLab.git](https://github.com/scseely/AADLab.git)
 ```
 
 If you have a github.com account, feel free to fork the repository so that you can commit changes as you move along.
@@ -40,45 +40,45 @@ In this step, we will create two AAD instances. One will be associated with our 
 First, make sure you are logged in. Run the following command:
 
 ```
-Connect-AzureRmAccount
+Connect-AzAccount
 ```
 
 Upon logging in, you can see a list of the subscriptions you have access to. List those subscriptions using the following:
 
 ```
-Get-AzureRmSubscription
+Get-AzSubscription
 ```
 
 From the list displayed, select the default subscription for your commands:
 
 ```
-Set-AzureRmContext -SubscriptionId <subscription GUID>
+Set-AzContext -SubscriptionId <subscription GUID>
 ```
 
 Verify that the right account is set by executing
 
 ```
-Get-AzureRmContext
+Get-AzContext
 ```
 
-Once logged in, you create two active directories with globally unique names. Suggested names are:
+Once logged in, you create two active directories with globally unique names. These names cannot be more than 27 characters long. Suggested names are:
 
-- < your email alias >AADMultiTenantLab1
-- < your email alias >AADMultiTenantLab2
+- < your email alias >AADLab1
+- < your email alias >AADLab2
 
 In the lab, we refer to these as the names
 
--  <i>UniquePart</i>AADMultiTenantLab1
--  <i>UniquePart</i>AADMultiTenantLab2
+-  <i>UniquePart</i>AADLab1
+-  <i>UniquePart</i>AADLab2
 
 This is one of the tasks you need to do from the portal. To create an Azure Active Directory, follow these steps:
 
 1. Open your web browser and navigate to [https://portal.azure.com/#create/hub](https://portal.azure.com/#create/hub).
 2. In the search box, enter _Azure Active Directory_
 3. Click on _Create_
-4. For _Organization name_ and _Initial domain name_, enter <i>UniquePart</i>AADMultiTenantLab1
+4. For _Organization name_ and _Initial domain name_, enter <i>UniquePart</i>AADLab1
 5. Click on _Create_
-6. Repeat steps 1-5, using <i>UniquePart</i>AADMultiTenantLab2 for the other Azure Active Directory. You can do this while Azure provisions the first AAD.
+6. Repeat steps 1-5, using <i>UniquePart</i>AADLab2 for the other Azure Active Directory. You can do this while Azure provisions the first AAD.
 
 The operations should complete in about one minute. At this time, you should be able to see both AAD instances from the portal. If you click on your name in the upper right hand corner of the portal, you will see an option to _Switch Directory_. Click on that.
 
@@ -88,32 +88,36 @@ You will then see a list, and the list should show both directories. Note the GU
 
  ![Directory GUIDs](./images/DirectoryGuids.png)
 
-- ScseelyAADMultiTenantLab1: e0b57188-0de8-460b-8aef-73bf95a55d82
-- ScseelyAADMultiTenantLab2: ca7ce8fe-9914-4a7c-83cc-5c7317170fb4
+- ScseelyAADLab1: e0b57188-0de8-460b-8aef-73bf95a55d82
+- ScseelyAADLab2: ca7ce8fe-9914-4a7c-83cc-5c7317170fb4
 
 Copy those values to OneNote, notepad, or anywhere else you can easily copy+paste them.
 
-# Lab 3: Create an application in <i>UniquePart</i>AADMultiTenantLab1
+# Lab 3: Create an application in <i>UniquePart</i>AADLab1
 
-We will be setting up an application on your local machine to work with AAD. Before we do this, we need to set the <i>UniquePart</i>AADMultiTenantLab1 as the current AAD we are working with.
+We will be setting up an application on your local machine to work with AAD. Before we do this, we need to set the <i>UniquePart</i>AADLab1 as the current AAD we are working with.
 
-1. Login. Use the following to select <i>UniquePart</i>AADMultiTenantLab1, using the GUID you recorded at the end of Lab 2:
+1. Login. Use the following to select <i>UniquePart</i>AADLab1, using the GUID you recorded at the end of Lab 2:
 
     ```
-    Connect-AzureAD -TenantId "<UniquePartAADMultiTenantLab1>"
+    Connect-AzAccount -TenantId "<<i>UniquePart</i>AADLab1>
     ```
 
     For example, I entered:
 
     ```
-    Connect-AzureAD -TenantId "e0b57188-0de8-460b-8aef-73bf95a55d82"
+    Connect-AzAccount -TenantId "e0b57188-0de8-460b-8aef-73bf95a55d82"
     ```
 
     This then shows information about you in that tenant. At any time, you can see which tenant is in context with the command:
 
     ```
-    Get-AzureADTenantDetail
+    Get-AzureADTenant
     ```
+
+    #
+    # TODO: The display from this command is different than what I see now.
+    #
 
     I get the following output:
 
@@ -122,13 +126,17 @@ We will be setting up an application on your local machine to work with AAD. Bef
 
     --------                             -----------               --------------
 
-    e0b57188-0de8-460b-8aef-73bf95a55d82 ScseelyAADMultiTenantLab1 ScseelyAADMultiTenantLab1.onmicrosoft.com
+    e0b57188-0de8-460b-8aef-73bf95a55d82 ScseelyAADLab1 ScseelyAADLab1.onmicrosoft.com
     ```
 
-1. Create the AAD application entry. This isn't an actual application; instead it is just the data about an application that will eventually exist. Now that we have the tenant selected, we need to create the application registration within the AAD tenant. We want the application to allow for multiple tenants. Most of the parameters are boilerplate; we set the AvailableToOtherTenants parameter to $True so that AAD knows this application will process logins from multiple AAD tenants. Enter the following command to register the application with the AAD tenant, remembering to replace the IdentifierUri <i>UniquePart</i> with the string you used for directory uniqueness:
+1. Create the AAD application entry. This isn't an actual application; instead it is just the data about an application that will eventuagilly exist. Now that we have the tenant selected, we need to create the application registration within the AAD tenant. We want the application to allow for multiple tenants. Most of the parameters are boilerplate; we set the AvailableToOtherTenants parameter to $True so that AAD knows this application will process logins from multiple AAD tenants. Enter the following command to register the application with the AAD tenant, remembering to replace the IdentifierUri <i>UniquePart</i> with the string you used for directory uniqueness:
+
+    #
+    # TODO: New-AzureADApplication is now Get-AzADApplication. This hangs my Mac which makes me thing the dependency the PowerShell commandlet takes is making me fail because it's full .NET
+    #
 
     ```
-    New-AzureADApplication -DisplayName 'AADMultiTenantLab' -ReplyUrls "https://localhost:5001/signin-oidc" -Homepage 'https://localhost:5001' -AvailableToOtherTenants $True -IdentifierUris "http://AADMultiTenantLab.UniquePartAADMultiTenantLab1.onmicrosoft.com"
+    New-AzureADApplication -DisplayName 'AADLab' -ReplyUrls "https://localhost:5001/signin-oidc" -Homepage 'https://localhost:5001' -AvailableToOtherTenants $True -IdentifierUris "http://AADLab.PartAADLab1.onmicrosoft.com"
     ```
 
     The output will look something like this:
@@ -138,12 +146,12 @@ We will be setting up an application on your local machine to work with AAD. Bef
 
     --------                             -----                                -----------
 
-    eebcc0a6-d3fe-40c2-bf9e-aca338653f72 740c89e3-e856-45a7-9fe0-8f6f37427e61 AADMultiTenantLab
+    eebcc0a6-d3fe-40c2-bf9e-aca338653f72 740c89e3-e856-45a7-9fe0-8f6f37427e61 AADLab
     ```
 
     If you ever need to list the applications in the tenant, use the Get-AzureADApplication command.
 
-    At this point, we have created our application. You should be able to see it in the Active Directory within the portal. If the application does not show up, make sure that you've switched the directory to <i>UniquePart</i>AADMultiTenantLab1. From the portal, you can view the applications by doing the following:
+    At this point, we have created our application. You should be able to see it in the Active Directory within the portal. If the application does not show up, make sure that you've switched the directory to <i>UniquePart</i>AADLab1. From the portal, you can view the applications by doing the following:
 
     <ol type="a">
         <li> Select _Azure Active Directory_. </li>
@@ -153,7 +161,7 @@ We will be setting up an application on your local machine to work with AAD. Bef
 1. Add a service principal. This is the identity the application uses with respect to AAD. Using the AppId you had from creating the application in place of <AppId> below, run the following command (all one line):
 
     ```
-    New-AzureADServicePrincipal -AccountEnabled $True -AppId "<AppId>" -AppRoleAssignmentRequired $True -DisplayName "AADMultiTenantLab"
+    New-AzureADServicePrincipal -AccountEnabled $True -AppId "<AppId>" -AppRoleAssignmentRequired $True -DisplayName "AADLab"
     ```
 1. Add permission to read the AAD graph, which is required to allow the actual application to read data about users. We do this with the following PowerShell. Note that we use the ObjectId this time instead of the AppId. [Note, line ii is split across two lines here, though must be entered as one command.]
 
@@ -181,7 +189,7 @@ In this section, we will do the following tasks:
 
 ## Step 1: Install AAD Assemblies
 
-In the VS Code, open the Lab4 directory as your project. From VS Code, edit the AADMultiTenantLab.csproj file and add the following line to the other < PackageReference > elements:
+In the VS Code, open the Lab4 directory as your project. From VS Code, edit the AADLab.csproj file and add the following line to the other < PackageReference > elements:
 
 ```
 <PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="2.\*"/>
@@ -320,13 +328,13 @@ In this step, we will add authentication and will authorize anyone with an AAD i
 
 # Lab 5: Login from a different tenant
 
-To do this, we will create a user in the tenant <i>UniquePart</i>AADMultiTenantLab2. Once created, we will use that identity to log in.
+To do this, we will create a user in the tenant <i>UniquePart</i>AADLab2. Once created, we will use that identity to log in.
 
 1. Open PowerShell.
 2. Connect to the other tenant using:
 
     ```
-    Connect-AzureAD -TenantId "<GUID for <i>UniquePart</i>AADMultiTenantLab2>"
+    Connect-AzureAD -TenantId "<GUID for <i>UniquePart</i>AADLab2>"
     ```
 
 1. Run the following block of commands:
@@ -339,7 +347,7 @@ To do this, we will create a user in the tenant <i>UniquePart</i>AADMultiTenantL
 
     As a result of running the commands, you will see an object gets created with the name and email address selected above.
 
-With this ready, we should be able to run the application. Your user name will be labuser@<i>UniquePart</i>AADMultiTenantLab2.onmicrosoft.com. You can copy this name from the output of step 3 if you want to avoid typos. We now need to login.
+With this ready, we should be able to run the application. Your user name will be labuser@<i>UniquePart</i>AADLab2.onmicrosoft.com. You can copy this name from the output of step 3 if you want to avoid typos. We now need to login.
 
 1. From VS Code, with the lab open, select _Debug__Start Debugging_.
 2. On the web page, click on _Sign In_
@@ -364,7 +372,7 @@ With this ready, we should be able to run the application. Your user name will b
 
     ![Pick account](./images/pickaccount.png)
 
-    Use the labuser@UniquePartAADMultiTenantLab2.onmicrosoft.com email with the password P@ssword123. You will be asked to change the password on first usage. Use whatever you like. Upon logging in, you'll see the following:
+    Use the labuser@PartAADLab2.onmicrosoft.com email with the password P@ssword123. You will be asked to change the password on first usage. Use whatever you like. Upon logging in, you'll see the following:
 
     ![Accept account](./images/AcceptAccount.png)
 
